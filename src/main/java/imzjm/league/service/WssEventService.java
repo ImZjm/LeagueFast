@@ -1,5 +1,8 @@
 package imzjm.league.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import imzjm.league.data.AppFunctionStatus;
 import imzjm.league.data.Summoner;
 import imzjm.league.lcu.ApiRequest;
@@ -51,65 +54,44 @@ public class WssEventService {
 
     //自动选英雄
     public void autoPick(CharSequence s){
-        if (!AppFunctionStatus.getINSTANCE().isAutoPick())
+
+        //获取data节点json数据
+        JsonNode dataNode = getDataNode(s.toString());
+
+        //遍历 myTeam 获取自己的cellId
+        int cellId = -1;
+
+        JsonNode myTeamNode = dataNode.get("myTeam");
+        for (JsonNode oneSummoner : myTeamNode) {
+            long summonerId = oneSummoner.get("summonerId").asLong();
+            if (summonerId != summoner.getSummonerId())
+                continue;
+
+            cellId = oneSummoner.get("cellId").asInt();
+        }
+
+        //遍历 actions
+        int actionsId = -1;
+        String actionType = null;   // pick 或 ban
+        JsonNode actionsNode = dataNode.get("actions");
+        for (JsonNode action : actionsNode) {
+            JsonNode oneAction = action.get(0);
+            if (oneAction.get("actorCellId").asInt() != cellId)
+                continue;
+            if (!oneAction.get("isInProgress").asBoolean())
+                continue;
+            actionsId = oneAction.get("id").asInt();
+            actionType = oneAction.get("type").asText();
+        }
+
+        if (actionsId == -1 || actionType == null)
             return;
-        //确认当前为 选英雄环节
-        if (!Pattern.compile("\"type\":\"pick\"").matcher(s).find())
-            return;
-        Pattern pickPtn = Pattern.compile("\"eventType\":\"Create\"");
-        if (!pickPtn.matcher(s).find())
-            return;
-        //已确认 当前状态进入bp环节的初始状态, 开始执行 选择并锁定英雄
 
-        //遍历 召唤师id, 直到找到自己
-        Long currentSmeId = summoner.getSummonerId();
-        Pattern smeIdPtn = Pattern.compile("(?<=summonerId\":)([^,]*)");
-        Matcher smeIdMch = smeIdPtn.matcher(s);
-
-        int tempCount = 0;
-        while (smeIdMch.find()){
-            if (Long.parseLong(smeIdMch.group()) == currentSmeId){
-                break;
-            }
-            tempCount++;
-        }
-
-        //cellId 和 召唤师id 是成对出现的
-        //根据自己的召唤师id 找到 自己的cellId
-        Pattern cellIdPtn = Pattern.compile("(?<=cellId\":)([^,]*)");
-        Matcher cellIdMch = cellIdPtn.matcher(s);
-        for (int i = 0; i <= tempCount; i++) {
-            if (!cellIdMch.find())
-                return;
-        }
-        //这时候得到的 cellId 就是自己的
-        int currentCellId = Integer.parseInt(cellIdMch.group());
-
-        //actorCellId == cellId
-        //actorCellId 和 id(即actionsId) 也是成对出现的
-        //同理 先找到自己的 actorCellId
-        Matcher actorCellIdMch = Pattern.compile("(?<=actorCellId\":)([^,]*)").matcher(s);
-        tempCount = 0;
-        while (actorCellIdMch.find()){
-            if (Integer.parseInt(actorCellIdMch.group()) == currentCellId)
-                break;
-            tempCount++;
-        }
-
-        //同理，根据出现顺序，匹配自己的actionsId
-        Matcher actionsIdMch = Pattern.compile("(?<=\"id\":)([^,]*)").matcher(s);
-        for (int i = 0; i <= tempCount; i++) {
-            if (!actionsIdMch.find())
-                return;
-        }
-
-        //拿到 actionsId 后, 就拿到了 选择并锁定英雄api 的第一个参数
-        int currentActionsId = Integer.parseInt(actionsIdMch.group());
-
-        //被选择的 英雄id
-        int championId = appData.getAutoPickedChamp();
         ApiRequest apiRequest = new ApiRequest();
-        apiRequest.banOrPickChamp(championId, currentActionsId);
+
+        if (AppFunctionStatus.getINSTANCE().isAutoPick() && actionType.equals("pick")) {
+            apiRequest.banOrPickChamp(appData.getAutoPickedChamp(), actionsId);
+        }
 
     }
 
@@ -123,6 +105,17 @@ public class WssEventService {
         //接受对局
         ApiRequest apiRequest = new ApiRequest();
         apiRequest.autoAccept();
+    }
+
+    public JsonNode getDataNode(String jsonStr){
+        JsonNode jsonNode = null;
+        try {
+            jsonNode = new ObjectMapper().readTree(jsonStr);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+
+        return jsonNode==null ? null : jsonNode.get(2).get("data");
     }
 
 }
