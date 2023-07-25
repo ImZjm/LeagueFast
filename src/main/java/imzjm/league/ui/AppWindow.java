@@ -76,12 +76,10 @@ public class AppWindow extends JFrame {
         //自动锁定英雄
         JCheckBox autoPick = new JCheckBox("秒选英雄");
         autoPick.setFont(font.deriveFont(15.0F));
-        autoPick.setFocusable(false);
         autoPick.addItemListener(appService::changeAutoPickStatus);
         work.add(autoPick);
 
         JComboBox<String> champions = new JComboBox<>();
-        champions.setFocusable(false);
         champions.setPreferredSize(new Dimension(160, 25));
         appService.addChampionItem(champions);
 
@@ -91,7 +89,6 @@ public class AppWindow extends JFrame {
         //自动接受对局
         JCheckBox autoAccept = new JCheckBox("自动接受对局");
         autoAccept.setFont(font.deriveFont(15.0F));
-        autoAccept.setFocusable(false);
         autoAccept.addItemListener(appService::changeAutoAcceptStatus);
         work.add(autoAccept);
 

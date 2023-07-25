@@ -1,15 +1,18 @@
 package imzjm.league;
 
+import com.formdev.flatlaf.FlatLightLaf;
 import imzjm.league.lcu.Connect;
 import imzjm.league.service.DataService;
 import imzjm.league.service.WssEventService;
 import imzjm.league.ui.AppWindow;
 
 import javax.swing.*;
-import javax.swing.plaf.synth.SynthLookAndFeel;
 
 public class Main {
     public static void main(String[] args) throws Exception {
+        //全局主题
+        FlatLightLaf.setup();
+
         Connect connect = Connect.getConnect();
         if (!connect.getStatus()) {
             System.out.println("请先启动 英雄联盟客户端! ");
@@ -17,8 +20,6 @@ public class Main {
             JOptionPane.showMessageDialog(app, "未检测到英雄联盟客户端. . . ", "连接失败", JOptionPane.WARNING_MESSAGE);
 
             app.setVisible(true);
-
-            UIManager.setLookAndFeel(new SynthLookAndFeel());
 
         }
         else {
@@ -39,8 +40,6 @@ public class Main {
             //启动
             app.setVisible(true);
 
-            //设置 APP 主题
-            UIManager.setLookAndFeel(new SynthLookAndFeel());
 
             //打印连接信息
             showConnectInfo();
