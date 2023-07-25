@@ -7,6 +7,10 @@ import imzjm.league.service.AppService;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.IOException;
 import java.net.URL;
 
@@ -28,6 +32,14 @@ public class AppWindow extends JFrame {
         setSize(520, 300);
         setResizable(false);
         setLocationRelativeTo(null);
+        setFocusable(true);
+        addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                requestFocus();
+            }
+        });
+        JFrame thisWindow = this;
 
         //顶部欢迎语句
         Panel welcome = new Panel(){
@@ -82,8 +94,20 @@ public class AppWindow extends JFrame {
         JComboBox<String> champions = new JComboBox<>();
         champions.setPreferredSize(new Dimension(160, 25));
         appService.addChampionItem(champions);
+        champions.setEditable(true);
+        JTextField editor = (JTextField) champions.getEditor().getEditorComponent();
+        editor.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyTyped(KeyEvent e) {
+                if (e.getKeyChar() == KeyEvent.VK_ENTER){
+                    thisWindow.requestFocus();
+                    return;
+                }
+                new Thread(() -> appService.comboBoxRetrieve(e, champions)).start();
+            }
+        });
 
-        champions.addItemListener(appService::changePickedChamp);
+        champions.addItemListener(e -> new Thread(() -> appService.changePickedChamp(e, champions)).start());
         work.add(champions);
 
         //自动接受对局
