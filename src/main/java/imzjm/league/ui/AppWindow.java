@@ -23,7 +23,7 @@ public class AppWindow extends JFrame {
 
         Summoner summonerData = Summoner.getSummoner();
 
-        setTitle("LeagueFast v1.0 by 恨别鸟惊心");
+        setTitle("LeagueFast v1.1 by 恨别鸟惊心");
         URL iconUrl = Main.class.getClassLoader().getResource("icon.jpg");
         if (iconUrl != null) {
             setIconImage(ImageIO.read(iconUrl));
