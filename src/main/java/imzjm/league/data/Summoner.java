@@ -1,5 +1,8 @@
 package imzjm.league.data;
 
+import imzjm.league.lcu.Connect;
+import imzjm.league.service.DataService;
+
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.io.FileNotFoundException;
@@ -15,6 +18,8 @@ public class Summoner {
     private Long summonerId;
 
     private Map<String, Integer> ownedChampions;
+
+    private Map<String, Integer> allChampions;
 
     private static final Summoner summoner = new Summoner();
 
@@ -38,6 +43,18 @@ public class Summoner {
         ownedChampions = new HashMap<>();
         ownedChampions.put("无", -1);
 
+        allChampions = new HashMap<>();
+        allChampions.put("无", -1);
+
+    }
+
+    public void setData() {
+        if (Connect.getConnect().getStatus()) {
+            DataService dataService = new DataService();
+            dataService.freshSummoner();
+            dataService.getOwnedChampions();
+            dataService.getAllChampions();
+        }
     }
 
     public Image getIcon() {
@@ -70,5 +87,13 @@ public class Summoner {
 
     public void setOwnedChampions(Map<String, Integer> ownedChampions) {
         this.ownedChampions = ownedChampions;
+    }
+
+    public Map<String, Integer> getAllChampions() {
+        return allChampions;
+    }
+
+    public void setAllChampions(Map<String, Integer> allChampions) {
+        this.allChampions = allChampions;
     }
 }

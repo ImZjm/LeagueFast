@@ -7,6 +7,10 @@ public class AppFunctionStatus {
 
     private boolean autoAccept = false;
 
+    private int autoBanChamp = -1;
+
+    private boolean autoBan = false;
+
     private static final AppFunctionStatus INSTANCE = new AppFunctionStatus();
 
     private AppFunctionStatus(){}
@@ -37,5 +41,21 @@ public class AppFunctionStatus {
 
     public void setAutoAccept(boolean autoAccept) {
         this.autoAccept = autoAccept;
+    }
+
+    public int getAutoBanChamp() {
+        return autoBanChamp;
+    }
+
+    public void setAutoBanChamp(int autoBanChamp) {
+        this.autoBanChamp = autoBanChamp;
+    }
+
+    public boolean isAutoBan() {
+        return autoBan;
+    }
+
+    public void setAutoBan(boolean autoBan) {
+        this.autoBan = autoBan;
     }
 }

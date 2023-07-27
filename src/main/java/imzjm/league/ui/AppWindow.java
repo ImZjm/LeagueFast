@@ -7,10 +7,7 @@ import imzjm.league.service.AppService;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.event.*;
 import java.io.IOException;
 import java.net.URL;
 
@@ -91,30 +88,68 @@ public class AppWindow extends JFrame {
         autoPick.addItemListener(appService::changeAutoPickStatus);
         work.add(autoPick);
 
-        JComboBox<String> champions = new JComboBox<>();
-        champions.setPreferredSize(new Dimension(160, 25));
-        appService.addChampionItem(champions);
-        champions.setEditable(true);
-        JTextField editor = (JTextField) champions.getEditor().getEditorComponent();
-        editor.addKeyListener(new KeyAdapter() {
+        JComboBox<String> pickChamps = new JComboBox<>();
+        pickChamps.setPreferredSize(new Dimension(160, 25));
+        appService.addChampionItem(pickChamps, "pick");
+        pickChamps.setEditable(true);
+        JTextField pickEditor = (JTextField) pickChamps.getEditor().getEditorComponent();
+        pickEditor.addKeyListener(new KeyAdapter() {
             @Override
             public void keyTyped(KeyEvent e) {
                 if (e.getKeyChar() == KeyEvent.VK_ENTER){
                     thisWindow.requestFocus();
                     return;
                 }
-                new Thread(() -> appService.comboBoxRetrieve(e, champions)).start();
+                new Thread(() -> appService.comboBoxRetrieve(e, pickChamps, summonerData.getOwnedChampions(), "pick"))
+                        .start();
             }
         });
 
-        champions.addItemListener(e -> new Thread(() -> appService.changePickedChamp(e, champions)).start());
-        work.add(champions);
+        pickChamps.addItemListener(e -> new Thread(() -> appService.changeSelectedChamp(e, pickChamps, "pick")).start());
+        work.add(pickChamps);
 
         //自动接受对局
         JCheckBox autoAccept = new JCheckBox("自动接受对局");
         autoAccept.setFont(font.deriveFont(15.0F));
         autoAccept.addItemListener(appService::changeAutoAcceptStatus);
         work.add(autoAccept);
+
+        //空白区，先占位置
+        Label space = new Label();
+        space.setPreferredSize(new Dimension(160, 25));
+        space.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                requestFocus();
+            }
+        });
+        work.add(space);
+
+        //自动禁英雄
+        JCheckBox autoBan = new JCheckBox("自动禁用");
+        autoBan.setFont(font.deriveFont(15.0F));
+        autoBan.addItemListener(appService::changeAutoBanStatus);
+        work.add(autoBan);
+
+        JComboBox<String> banChamps = new JComboBox<>();
+        banChamps.setPreferredSize(new Dimension(160, 25));
+        appService.addChampionItem(banChamps, "ban");
+        banChamps.setEditable(true);
+        JTextField banEditor = (JTextField) banChamps.getEditor().getEditorComponent();
+        banEditor.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyTyped(KeyEvent e) {
+                if (e.getKeyChar() == KeyEvent.VK_ENTER){
+                    thisWindow.requestFocus();
+                    return;
+                }
+                new Thread(() -> appService.comboBoxRetrieve(e, banChamps, summonerData.getAllChampions(), "ban"))
+                        .start();
+            }
+        });
+        banChamps.addItemListener(e -> new Thread(() -> appService.changeSelectedChamp(e, banChamps, "ban")).start());
+
+        work.add(banChamps);
 
         add(welcome, BorderLayout.NORTH);
         add(summonerPanel, BorderLayout.WEST);

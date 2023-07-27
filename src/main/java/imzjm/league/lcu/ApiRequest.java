@@ -1,5 +1,7 @@
 package imzjm.league.lcu;
 
+import imzjm.league.data.Summoner;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -30,6 +32,14 @@ public class ApiRequest {
                 "}";
         request(url, "PATCH", body);
 
+    }
+
+    //Api: /lol-champions/v1/inventories/{summonerId}/champions-minimal
+    //获取所有英雄
+    public InputStream getAllChampions() {
+        Long summonerId = Summoner.getSummoner().getSummonerId();
+        String url = leagueCon.getAddress() + "/lol-champions/v1/inventories/" + summonerId + "/champions-minimal";
+        return request(url, "GET");
     }
 
     //Api: /lol-champions/v1/owned-champions-minimal

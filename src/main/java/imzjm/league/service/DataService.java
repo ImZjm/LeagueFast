@@ -1,5 +1,7 @@
 package imzjm.league.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import imzjm.league.data.Summoner;
 import imzjm.league.lcu.ApiRequest;
 
@@ -16,6 +18,29 @@ import java.util.regex.Pattern;
 
 public class DataService {
     private static final Summoner summoner = Summoner.getSummoner();
+
+    //获取全部英雄
+    public void getAllChampions() {
+        ApiRequest apiRequest = new ApiRequest();
+        InputStream allChampions = apiRequest.getAllChampions();
+
+        JsonNode allChampNode = null;
+        try {
+            allChampNode =  new ObjectMapper().readTree(allChampions);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        Map<String, Integer> map = new HashMap<>();
+        if (allChampNode != null) {
+            //第一组数据为 "无" 这里直接略过
+            for (int i = 1; i < allChampNode.size(); i++){
+                JsonNode oneChamp = allChampNode.get(i);
+                map.put(oneChamp.get("name").asText() + " - " + oneChamp.get("title").asText(), oneChamp.get("id").asInt());
+            }
+        }
+        summoner.setAllChampions(map);
+    }
 
     //生成秒选英雄列表
     public void getOwnedChampions() {
@@ -44,7 +69,7 @@ public class DataService {
     }
 
     //获取召唤师头像和名称
-    public void freshSummoner() throws IOException {
+    public void freshSummoner() {
         ApiRequest apiRequest = new ApiRequest();
         InputStream currentSummoner = apiRequest.getCurrentSummoner();
         String s = convertStr(currentSummoner);
@@ -68,7 +93,11 @@ public class DataService {
         Matcher headMatcher = headPattern.matcher(s);
         if (!headMatcher.find())
             return;
-        summoner.setIcon(ImageIO.read(apiRequest.getImg(Integer.parseInt(headMatcher.group()))));
+        try {
+            summoner.setIcon(ImageIO.read(apiRequest.getImg(Integer.parseInt(headMatcher.group()))));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
     }
 

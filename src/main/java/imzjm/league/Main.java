@@ -1,8 +1,8 @@
 package imzjm.league;
 
 import com.formdev.flatlaf.FlatLightLaf;
+import imzjm.league.data.Summoner;
 import imzjm.league.lcu.Connect;
-import imzjm.league.service.DataService;
 import imzjm.league.service.WssEventService;
 import imzjm.league.ui.AppWindow;
 
@@ -24,9 +24,8 @@ public class Main {
         }
         else {
             //初始化数据
-            DataService dataService = new DataService();
-            dataService.freshSummoner();
-            dataService.getOwnedChampions();
+            Summoner summoner = Summoner.getSummoner();
+            summoner.setData();
 
             //创建 WSS 连接
             WssEventService wssEventService = new WssEventService();
