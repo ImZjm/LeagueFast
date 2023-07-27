@@ -74,14 +74,19 @@ public class WssEventService {
         int actionsId = -1;
         String actionType = null;   // pick 或 ban
         JsonNode actionsNode = dataNode.get("actions");
-        for (JsonNode action : actionsNode) {
-            JsonNode oneAction = action.get(0);
-            if (oneAction.get("actorCellId").asInt() != cellId)
-                continue;
-            if (!oneAction.get("isInProgress").asBoolean())
-                continue;
-            actionsId = oneAction.get("id").asInt();
-            actionType = oneAction.get("type").asText();
+
+        //bp环节，更新一次动作为一个action
+        //遍历 actions 中所有内容
+        for (JsonNode oneAction : actionsNode) {
+            //每个 action 数组中， 可能有多组数据
+            for (JsonNode oneActionData : oneAction) {
+                if (oneActionData.get("actorCellId").asInt() != cellId)
+                    continue;
+                if (!oneActionData.get("isInProgress").asBoolean())
+                    break;
+                actionsId = oneActionData.get("id").asInt();
+                actionType = oneActionData.get("type").asText();
+            }
         }
 
         if (actionsId == -1 || actionType == null)
