@@ -9,6 +9,7 @@ import imzjm.league.lcu.ApiRequest;
 import imzjm.league.lcu.websocket.WssConnect;
 
 import java.net.http.WebSocket;
+import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -37,7 +38,7 @@ public class WssEventService {
     public void WssEventHandler (WebSocket webSocket, CharSequence data, boolean last) {
         if (data.isEmpty())
             return;
-        //System.out.println("message: " + data);
+        System.out.println("message: " + data);
 
         //判断是否为已订阅的事件类型
         Pattern eventPtn = Pattern.compile("(?<=OnJsonApiEvent_)[^\"]*");
@@ -46,14 +47,14 @@ public class WssEventService {
             return;
 
         switch (eventMch.group()) {
-            case "lol-champ-select_v1_session" -> autoPick(data);
+            case "lol-champ-select_v1_session" -> autoBPChamp(data);
             case "lol-gameflow_v1_gameflow-phase" -> autoAccept(data);
             default -> System.out.println("未知错误!");
         }
     }
 
     //自动选英雄
-    public void autoPick(CharSequence s){
+    public void autoBPChamp(CharSequence s){
 
         //获取data节点json数据
         JsonNode dataNode = getDataNode(s.toString());
@@ -92,10 +93,27 @@ public class WssEventService {
         if (actionsId == -1 || actionType == null)
             return;
 
+        //获取已经被 ban 的英雄
+        //这些英雄将不能被操作
+        JsonNode bansNode = dataNode.get("bans");
+        JsonNode myTeamBans = bansNode.get("myTeamBans");
+        JsonNode theirTeamBans = bansNode.get("theirTeamBans");
+        ArrayList<Integer> bans = new ArrayList<>();
+        myTeamBans.forEach(ban -> bans.add(ban.asInt()));
+        theirTeamBans.forEach(ban -> bans.add(ban.asInt()));
+
         ApiRequest apiRequest = new ApiRequest();
 
         if (AppFunctionStatus.getINSTANCE().isAutoPick() && actionType.equals("pick")) {
             apiRequest.banOrPickChamp(appData.getAutoPickedChamp(), actionsId);
+        }
+
+        if (AppFunctionStatus.getINSTANCE().isAutoBan() && actionType.equals("ban")) {
+            for (Integer ban : bans) {
+                if (ban == appData.getAutoPickedChamp() || ban == appData.getAutoBanChamp())
+                    return;
+            }
+            apiRequest.banOrPickChamp(appData.getAutoBanChamp(), actionsId);
         }
 
     }
